@@ -1,6 +1,7 @@
-#!/bin/bash
-
+#!/bin/sh
 #  Script creato da TheZero
+#
+#  Version GUI (Fork by Pinperepette) 
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,85 +18,85 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #  
- 
 
-build(){
-	cd "$ARCHIVE_FULLPATH"
-    find . -type f ! -regex '.*\.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum > DEBIAN/md5sums
-    cd ..
-    dpkg-deb -b "$ARCHIVE_FULLPATH"
-    read -p "Eliminare i file sorgenti? (Y/N)" $OPTION
-    if [ "$OPTION" == "Y" ]; then
-		rm -fv -R "$ARCHIVE_FULLPATH"
-    fi
-    notify-send -t 5000 -i /usr/share/icons/gnome/32x32/status/info.png "Lavoro finito, Padrone" "Pacchetto Creato con successo <b>$FILENAME</b>"
-
+# Funzioni #############################################################
+menu_principale(){
+azione=`zenity --list --width=250 --height=150 \
+  --title="D E B M O D" \
+  --text="What should I do?" \
+  --column="Options :" \
+	"I extract a deb file" \
+	"I create a deb file"`
 }
-
 
 extract(){
-	
-	mkdir "$NEWDIRNAME"
-    cp -fv -R "$ARCHIVE_FULLPATH" "$NEWDIRNAME"
-    cd "$NEWDIRNAME"
-    ar vx "$FILENAME"
-    rm -fv -R "$FILENAME"
-    for FILE in *.tar.gz; do [[ -e $FILE ]] && tar xvpf $FILE; done
-    for FILE in *.tar.lzma; do [[ -e $FILE ]] && tar xvpf $FILE; done
-    [[ -e "control.tar.gz" ]] && rm -fv -R "control.tar.gz"
-    [[ -e "data.tar.gz" ]] && rm -fv -R "data.tar.gz"
-    [[ -e "data.tar.lzma" ]] && rm -fv -R "data.tar.lzma"
-    [[ -e "debian-binary" ]] && rm -fv -R "debian-binary"
 
-    mkdir "DEBIAN"
-    [[ -e "changelog" ]] && mv -fv "changelog" "DEBIAN"
-    [[ -e "config" ]] && mv -fv "config" "DEBIAN"
-    [[ -e "conffiles" ]] && mv -fv "conffiles" "DEBIAN"
-    [[ -e "control" ]] && mv -fv "control" "DEBIAN"
-    [[ -e "copyright" ]] && mv -fv "copyright" "DEBIAN"
-    [[ -e "postinst" ]] && mv -fv "postinst" "DEBIAN"
-    [[ -e "preinst" ]] && mv -fv "preinst" "DEBIAN"
-    [[ -e "prerm" ]] && mv -fv "prerm" "DEBIAN"
-    [[ -e "postrm" ]] && mv -fv "postrm" "DEBIAN"
-    [[ -e "rules" ]] && mv -fv "rules" "DEBIAN"
-    [[ -e "shlibs" ]] && mv -fv "shlibs" "DEBIAN"
-    [[ -e "templates" ]] && mv -fv "templates" "DEBIAN"
-    [[ -e "triggers" ]] && mv -fv "triggers" "DEBIAN"
-    [[ -e ".svn" ]] && mv -fv ".svn" "DEBIAN"
+	(mkdir "$NEWDIRNAME"
+	cp -fv -R "$ARCHIVE_FULLPATH" "$NEWDIRNAME"
+	cd "$NEWDIRNAME"
+	ar vx "$FILENAME"
+	rm -fv -R "$FILENAME"
+	for FILE in *.tar.gz; do [[ -e $FILE ]] && tar xvpf $FILE; done
+	for FILE in *.tar.lzma; do [[ -e $FILE ]] && tar xvpf $FILE; done
+	[[ -e "control.tar.gz" ]] && rm -fv -R "control.tar.gz"
+	[[ -e "data.tar.gz" ]] && rm -fv -R "data.tar.gz"
+	[[ -e "data.tar.lzma" ]] && rm -fv -R "data.tar.lzma"
+	[[ -e "debian-binary" ]] && rm -fv -R "debian-binary"
 
-    [[ -e "md5sums" ]] && rm -fv -R "md5sums"
-    notify-send -t 5000 -i /usr/share/icons/gnome/32x32/status/info.png "Lavoro finito, Padrone" "Pacchetto Estratto con successo"
-		
+	mkdir "DEBIAN"
+	[[ -e "changelog" ]] && mv -fv "changelog" "DEBIAN"
+	[[ -e "config" ]] && mv -fv "config" "DEBIAN"
+	[[ -e "conffiles" ]] && mv -fv "conffiles" "DEBIAN"
+	[[ -e "control" ]] && mv -fv "control" "DEBIAN"
+	[[ -e "copyright" ]] && mv -fv "copyright" "DEBIAN"
+	[[ -e "postinst" ]] && mv -fv "postinst" "DEBIAN"
+	[[ -e "preinst" ]] && mv -fv "preinst" "DEBIAN"
+	[[ -e "prerm" ]] && mv -fv "prerm" "DEBIAN"
+	[[ -e "postrm" ]] && mv -fv "postrm" "DEBIAN"
+	[[ -e "rules" ]] && mv -fv "rules" "DEBIAN"
+	[[ -e "shlibs" ]] && mv -fv "shlibs" "DEBIAN"
+	[[ -e "templates" ]] && mv -fv "templates" "DEBIAN"
+	[[ -e "triggers" ]] && mv -fv "triggers" "DEBIAN"
+	[[ -e ".svn" ]] && mv -fv ".svn" "DEBIAN"
+
+	[[ -e "md5sums" ]] && rm -fv -R "md5sums") | zenity --progress --title="D E B M O D..." --text="deb extraction" --auto-kill --pulsate
+
 }
 
-
-# Program Main #
-
-case $1 in
-"b")
-	if [ $2 >/dev/null ]; then
-		ARCHIVE_FULLPATH="$2"
-		NEWDIRNAME=${ARCHIVE_FULLPATH%.*}
-	else
-		echo "Genio, Dammi un file da aprire se no non servo a niente!"
-		exit 1
-	fi
-	build
-;;
-"x")
-	if [ $2 >/dev/null ]; then
-		ARCHIVE_FULLPATH="$2"
+build(){
+	(cd "$ARCHIVE_FULLPATH"
+	find . -type f ! -regex '.*\.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum > DEBIAN/md5sums
+	cd ..
+	dpkg-deb -b "$ARCHIVE_FULLPATH"
+		rm -fv -R "$ARCHIVE_FULLPATH") | zenity --progress --title="D E B M O D..." --text="deb creation" --auto-kill --pulsate
+}
+# Script ###############################################################
+menu_principale
+case $azione in
+"I extract a deb file")
+file=`zenity --file-selection --title="Select a File"`
+	if [ $file >/dev/null ]; then
+		ARCHIVE_FULLPATH="$file"
 		NEWDIRNAME=${ARCHIVE_FULLPATH%.*}
 		FILENAME=${ARCHIVE_FULLPATH##*/}
 	else
-		echo "Genio, Dammi un file da aprire se no non servo a niente!"
+		zenity --error --no-wrap --no-markup --text="You have not selected folder" --title="D E B M O D ERROR" --window-icon='error' --width=400 --height=300
 		exit 1
 	fi
 	extract
 ;;
-*)
-	echo -e "Che cazzo stai facendo?! Non puoi guidare se sei ubriaco! \n\n$0 b \"cartella-sorgenti\" - per creare un deb\n$0 x \"nome.deb\" - per estrarre il contenuto di un deb\n"
+"I create a deb file")
+dir=`zenity --file-selection --title="Select a Directory" --directory`
+	if [ $dir >/dev/null ]; then
+		ARCHIVE_FULLPATH="$dir"
+		NEWDIRNAME=${ARCHIVE_FULLPATH%.*}
+	else
+		zenity --error --no-wrap --no-markup --text=" You have not selected directory" --title="D E B M O D ERROR" --window-icon='error' --width=400 --height=300
+		exit 1
+	fi
+	build 
+;;
+*)menu_principale
 ;;
 esac
-
 exit 0
