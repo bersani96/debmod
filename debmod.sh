@@ -18,84 +18,110 @@
 #  MA 02110-1301, USA.
 #  
  
-
 build(){
 	cd "$ARCHIVE_FULLPATH"
     find . -type f ! -regex '.*\.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum > DEBIAN/md5sums
     cd ..
-    dpkg-deb -b "$ARCHIVE_FULLPATH"
-    read -p "Eliminare i file sorgenti? (Y/N)" $OPTION
-    if [ "$OPTION" == "Y" ]; then
-		rm -fv -R "$ARCHIVE_FULLPATH"
+    if [ "$VERBOSE" == "" ]; then
+		cmd=`dpkg-deb -b "$ARCHIVE_FULLPATH"`
+	else
+		dpkg-deb -b "$ARCHIVE_FULLPATH"
     fi
-    notify-send -t 5000 -i /usr/share/icons/gnome/32x32/status/info.png "Lavoro finito, Padrone" "Pacchetto Creato con successo <b>$FILENAME</b>"
-
+    if [ "$KEEP" == "n" ]; then
+		rm -f$VERBOSE -R "$ARCHIVE_FULLPATH"
+    fi
 }
 
 
 extract(){
-	
-	mkdir "$NEWDIRNAME"
-    cp -fv -R "$ARCHIVE_FULLPATH" "$NEWDIRNAME"
+	if [[ -e "$NEWDIRNAME" ]]; then
+		if [ "$KEEP" == "n" ]; then
+			rm -f$VERBOSE -R "$NEWDIRNAME"
+			mkdir "$NEWDIRNAME"
+		fi
+	else
+	    mkdir "$NEWDIRNAME"
+	fi
+    cp -f$VERBOSE -R "$ARCHIVE_FULLPATH" "$NEWDIRNAME"
     cd "$NEWDIRNAME"
-    ar vx "$FILENAME"
-    rm -fv -R "$FILENAME"
-    for FILE in *.tar.gz; do [[ -e $FILE ]] && tar xvpf $FILE; done
-    for FILE in *.tar.lzma; do [[ -e $FILE ]] && tar xvpf $FILE; done
-    [[ -e "control.tar.gz" ]] && rm -fv -R "control.tar.gz"
-    [[ -e "data.tar.gz" ]] && rm -fv -R "data.tar.gz"
-    [[ -e "data.tar.lzma" ]] && rm -fv -R "data.tar.lzma"
-    [[ -e "debian-binary" ]] && rm -fv -R "debian-binary"
+    ar ${VERBOSE}x "$FILENAME"
+	rm -f$VERBOSE -R "$FILENAME"
+    for FILE in *.tar.gz; do [[ -e $FILE ]] && tar x${VERBOSE}pf $FILE; done
+    for FILE in *.tar.lzma; do [[ -e $FILE ]] && tar x${VERBOSE}pf $FILE; done
+    [[ -e "control.tar.gz" ]] && rm -f$VERBOSE -R "control.tar.gz"
+    [[ -e "data.tar.gz" ]] && rm -f$VERBOSE -R "data.tar.gz"
+    [[ -e "data.tar.lzma" ]] && rm -f$VERBOSE -R "data.tar.lzma"
+    [[ -e "debian-binary" ]] && rm -f$VERBOSE -R "debian-binary"
 
-    mkdir "DEBIAN"
-    [[ -e "changelog" ]] && mv -fv "changelog" "DEBIAN"
-    [[ -e "config" ]] && mv -fv "config" "DEBIAN"
-    [[ -e "conffiles" ]] && mv -fv "conffiles" "DEBIAN"
-    [[ -e "control" ]] && mv -fv "control" "DEBIAN"
-    [[ -e "copyright" ]] && mv -fv "copyright" "DEBIAN"
-    [[ -e "postinst" ]] && mv -fv "postinst" "DEBIAN"
-    [[ -e "preinst" ]] && mv -fv "preinst" "DEBIAN"
-    [[ -e "prerm" ]] && mv -fv "prerm" "DEBIAN"
-    [[ -e "postrm" ]] && mv -fv "postrm" "DEBIAN"
-    [[ -e "rules" ]] && mv -fv "rules" "DEBIAN"
-    [[ -e "shlibs" ]] && mv -fv "shlibs" "DEBIAN"
-    [[ -e "templates" ]] && mv -fv "templates" "DEBIAN"
-    [[ -e "triggers" ]] && mv -fv "triggers" "DEBIAN"
-    [[ -e ".svn" ]] && mv -fv ".svn" "DEBIAN"
+    if [[ -e "DEBIAN" ]]; then
+		if [ "$KEEP" == "n" ]; then
+			rm -f$VERBOSE -R "DEBIAN"
+			mkdir "DEBIAN"
+		fi
+	else
+	    mkdir "DEBIAN"
+	fi
+    [[ -e "changelog" ]] && mv -f$VERBOSE "changelog" "DEBIAN"
+    [[ -e "config" ]] && mv -f$VERBOSE "config" "DEBIAN"
+    [[ -e "conffiles" ]] && mv -f$VERBOSE "conffiles" "DEBIAN"
+    [[ -e "control" ]] && mv -f$VERBOSE "control" "DEBIAN"
+    [[ -e "copyright" ]] && mv -f$VERBOSE "copyright" "DEBIAN"
+    [[ -e "postinst" ]] && mv -f$VERBOSE "postinst" "DEBIAN"
+    [[ -e "preinst" ]] && mv -f$VERBOSE "preinst" "DEBIAN"
+    [[ -e "prerm" ]] && mv -f$VERBOSE "prerm" "DEBIAN"
+    [[ -e "postrm" ]] && mv -f$VERBOSE "postrm" "DEBIAN"
+    [[ -e "rules" ]] && mv -f$VERBOSE "rules" "DEBIAN"
+    [[ -e "shlibs" ]] && mv -f$VERBOSE "shlibs" "DEBIAN"
+    [[ -e "templates" ]] && mv -f$VERBOSE "templates" "DEBIAN"
+    [[ -e "triggers" ]] && mv -f$VERBOSE "triggers" "DEBIAN"
+    [[ -e ".svn" ]] && mv -f$VERBOSE ".svn" "DEBIAN"
 
-    [[ -e "md5sums" ]] && rm -fv -R "md5sums"
-    notify-send -t 5000 -i /usr/share/icons/gnome/32x32/status/info.png "Lavoro finito, Padrone" "Pacchetto Estratto con successo"
-		
+    [[ -e "md5sums" ]] && rm -f$VERBOSE -R "md5sums"
 }
 
 
 # Program Main #
+KEEP="n"
+VERBOSE=""
+ACTION="n"
 
-case $1 in
-"b")
-	if [ $2 >/dev/null ]; then
-		ARCHIVE_FULLPATH="$2"
-		NEWDIRNAME=${ARCHIVE_FULLPATH%.*}
-	else
-		echo "Genio, Dammi un file da aprire se no non servo a niente!"
-		exit 1
-	fi
+while getopts ":b:x:kv" opt; do
+  case $opt in
+    b)
+      ACTION="b"
+      ARCHIVE_FULLPATH="$2"
+	  NEWDIRNAME=${ARCHIVE_FULLPATH%.*}
+      ;;
+    x)
+      ACTION="x"
+      ARCHIVE_FULLPATH="$2"
+	  NEWDIRNAME=${ARCHIVE_FULLPATH%.*}
+	  FILENAME=${ARCHIVE_FULLPATH##*/}
+      ;;
+    k)
+      KEEP="y"
+      ;;
+    v)
+      VERBOSE="v"
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [ $ACTION == "b" ]; then
 	build
-;;
-"x")
-	if [ $2 >/dev/null ]; then
-		ARCHIVE_FULLPATH="$2"
-		NEWDIRNAME=${ARCHIVE_FULLPATH%.*}
-		FILENAME=${ARCHIVE_FULLPATH##*/}
-	else
-		echo "Genio, Dammi un file da aprire se no non servo a niente!"
-		exit 1
-	fi
+elif [ $ACTION == "x" ]; then
 	extract
-;;
-*)
-	echo -e "Che cazzo stai facendo?! Non puoi guidare se sei ubriaco! \n\n$0 b \"cartella-sorgenti\" - per creare un deb\n$0 x \"nome.deb\" - per estrarre il contenuto di un deb\n"
-;;
-esac
+elif [ $ACTION == "n" ]; then
+	echo -e "Usage: \n\t-b [file_path]\t-> Build DEB\n\t-x [dir_path]\t-> Extract DEB \n\t-k\t\t-> Keep File\n\t-v\t\t-> Verbose"
+	exit 1
+fi
 
 exit 0
