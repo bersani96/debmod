@@ -21,12 +21,13 @@
 
 # Funzioni #############################################################
 menu_principale(){
-azione=`zenity --list --width=250 --height=150 \
+azione=`zenity --list  \
   --title="D E B M O D" \
   --text="What should I do?" \
   --column="Options :" \
 	"I extract a deb file" \
-	"I create a deb file"`
+	"I create a deb file" \
+	"I install a deb file"`
 }
 
 extract(){
@@ -63,13 +64,117 @@ extract(){
 
 }
 
-build(){
-	(cd "$ARCHIVE_FULLPATH"
-	find . -type f ! -regex '.*\.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum > DEBIAN/md5sums
-	cd ..
-	dpkg-deb -b "$ARCHIVE_FULLPATH"
-		rm -fv -R "$ARCHIVE_FULLPATH") | zenity --progress --title="D E B M O D..." --text="deb creation" --auto-kill --pulsate
+#Create control file
+file_control(){
+        cd DEBIAN
+        echo Package: $nome >>control
+        dato=`zenity --entry --title="D E B M O D E" --text="Version of programm"`
+        echo Version: $dato >>control
+        echo Architecture: all >>control
+        dato=`zenity --entry --title="D E B M O D E" --text="Name of the developer and email\nExample: Tizio Caio <tizio@provider.com>"`
+        echo Maintainer: $dato >>control
+        dato=`zenity --entry --title="D E B M O D E" --text="Dependencies"`
+        echo Depends: $dato >>control
+        echo Section: base >>control
+        dato=`zenity --entry --title="D E B M O D E" --text="Homepage"`
+        echo Homepage: $dato >>control
+        dato=`zenity --entry --title="D E B M O D E" --text="Description"`
+        echo Description: $dato >>control
+        cd .. #go back to $nome (package's directory)
 }
+
+#Create .desktop file (starter for the menù)
+file_desktop(){
+        cd usr/share/applications
+        echo "[Desktop Entry]" >>$nome.desktop
+        echo "Encoding=UTF-8" >>$nome.desktop
+        echo "Type=Application" >>$nome.desktop
+        echo "Version=1.0" >>$nome.desktop
+        echo "Name=$nome" >>$nome.desktop
+        #Check if the user want to use a custom icon
+        zenity --question --title="D E B M O D E" --text="Do you want to use a custom icon?\nIf no, a default icon will be used. The icon must be 48x48."
+        if [ $? -eq 0 ]
+        then
+                #Create de directory for the icon
+                cd ..           #go to /usr/share
+                mkdir -p icons/hicolor/48x48/
+                cd applications         #go back to /usr/share/applications
+                #Choose the icon
+                dato=`zenity --file-selection --title="Choose the icon"`
+                #Copy the icon to the directory use for the icons
+                cp $dato ../icons/hicolor/48x48/$nome.png
+                echo "Icon=/usr/share/icons/hicolor/48x48/$nome.png" >>$nome.desktop
+        else
+                #Else, i use a random icon
+                echo "Icon=~/icona/gnome-multimedia.png" >>$nome.desktop
+        fi
+        dato=`zenity --entry --title="D E B M O D E" --text="Command for start the programm"`
+        echo "Exec=$dato" >>$nome.desktop
+        zenity --question --title="D E B M O D E" --text="Does the programm start in a terminal?"
+        if [ $? -eq 0 ]
+        then
+                echo "Terminal=true" >>$nome.dekstop
+        else
+                echo "Terminal=false" >>$nome.dekstop
+        fi
+        echo "Categories=Utility;Accessories;" >>$nome.desktop
+        cd ../../.. #Go back to $nome
+}
+
+build(){
+	#Structure
+        cd $nome        #Move into the package's directory
+        mkdir DEBIAN usr usr/bin
+        #Choose the executable file
+        exe=`zenity --file-selection --title="Choose the executable file"`
+        cp $exe usr/bin/
+        #Create the control file of the package
+        file_control
+       
+        #Check if the user want to create a .destop file
+        zenity --question --title="D E B M O D E" --text="Do you want to create a starter for the menù?"
+        if [ $? -eq 0 ]
+        then
+                mkdir -p usr/share/applications
+                file_desktop
+        fi
+        
+        #Create the package
+        cd ..               #Go out the package's directory
+        (
+        echo 20
+        dpkg -b $nome 
+        echo 100
+        )| zenity --progress --title="D E B M O D E"  --text="Building package..." --auto-close --pulsate
+        #Package created, send a notification
+        if [ -e $nome.deb ]
+        then
+		zenity --info --title="D E B M O D E" --text="Package successfully created"
+		#Delete the directory and other files
+		rm -rf $nome
+	else
+		zenity --error --title="D E B M O D E" --text"Package not created"
+		rm -rf $nome
+	fi
+}
+
+install_deb(){
+        #Choose the package
+        deb=`zenity --file-selection --title="Choose the package"`
+        (
+        echo 20
+        #Install the package
+        sudo dpkg -i $deb
+        if [ $? -eq 0 ]
+        then
+        	zenity --info --title="D E B M O D E" --text="Package successfully installed"
+        else
+        	zenity --error --title="D E B M O D E" --text"Package not installed"
+        fi
+        echo 100
+        )| zenity --progress --title="D E B M O D E" --text="Installing package..." --auto-close --pulsate      
+}
+
 # Script ###############################################################
 menu_principale
 case $azione in
@@ -86,15 +191,15 @@ file=`zenity --file-selection --title="Select a File"`
 	extract
 ;;
 "I create a deb file")
-dir=`zenity --file-selection --title="Select a Directory" --directory`
-	if [ $dir >/dev/null ]; then
-		ARCHIVE_FULLPATH="$dir"
-		NEWDIRNAME=${ARCHIVE_FULLPATH%.*}
-	else
-		zenity --error --no-wrap --no-markup --text=" You have not selected directory" --title="D E B M O D ERROR" --window-icon='error' --width=400 --height=300
-		exit 1
-	fi
-	build 
+	#Build e deb file
+        #Name of package
+        nome=`zenity --entry --title="D E B M O D" --text="Name of package"`
+        mkdir $nome
+        build
+;;
+"I install a deb file")
+	#Instal a deb file
+        install_deb
 ;;
 *)menu_principale
 ;;
