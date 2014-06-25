@@ -164,7 +164,7 @@ install_deb(){
         (
         echo 20
         #Install the package
-        sudo dpkg -i $deb
+        dpkg -i $deb
         if [ $? -eq 0 ]
         then
         	zenity --info --title="D E B M O D E" --text="Package successfully installed"
@@ -176,6 +176,12 @@ install_deb(){
 }
 
 # Script ###############################################################
+#First, I control if zenity is installed
+if ! type zenity >/dev/null
+then
+	echo "It's impossible to execute the script. The package zenity is not installed."
+	exit 1
+fi
 menu_principale
 case $azione in
 "I extract a deb file")
