@@ -1,30 +1,30 @@
 #!/bin/sh
-#  Script creato da TheZero
+# Script creato da TheZero
 #
-#  Version GUI (Fork by Pinperepette) 
+# Version GUI (Fork by Pinperepette)
 #
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#  
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#  
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-#  MA 02110-1301, USA.
-#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA 02110-1301, USA.
+#
 
 # Funzioni #############################################################
 menu_principale(){
-azione=`zenity --list  \
-  --title="D E B M O D" \
-  --text="What should I do?" \
-  --column="Options :" \
+	azione=`zenity --list \
+	  --title="D E B M O D" \
+	  --text="What should I do?" \
+	  --column="Options :" \
 	"I extract a deb file" \
 	"I create a deb file" \
 	"I install a deb file"`
@@ -96,9 +96,9 @@ file_desktop(){
         if [ $? -eq 0 ]
         then
                 #Create de directory for the icon
-                cd ..           #go to /usr/share
+                cd .. #go to /usr/share
                 mkdir -p icons/hicolor/48x48/
-                cd applications         #go back to /usr/share/applications
+                cd applications #go back to /usr/share/applications
                 #Choose the icon
                 dato=`zenity --file-selection --title="Choose the icon"`
                 #Copy the icon to the directory use for the icons
@@ -122,8 +122,8 @@ file_desktop(){
 }
 
 build(){
-	#Structure
-        cd $nome        #Move into the package's directory
+#Structure
+        cd $nome #Move into the package's directory
         mkdir DEBIAN usr usr/bin
         #Choose the executable file
         exe=`zenity --file-selection --title="Choose the executable file"`
@@ -140,22 +140,22 @@ build(){
         fi
         
         #Create the package
-        cd ..               #Go out the package's directory
+        cd .. #Go out the package's directory
         (
         echo 20
-        dpkg -b $nome 
+        dpkg -b $nome
         echo 100
-        )| zenity --progress --title="D E B M O D E"  --text="Building package..." --auto-close --pulsate
+        )| zenity --progress --title="D E B M O D E" --text="Building package..." --auto-close --pulsate
         #Package created, send a notification
         if [ -e $nome.deb ]
         then
-		zenity --info --title="D E B M O D E" --text="Package successfully created"
-		#Delete the directory and other files
-		rm -rf $nome
-	else
-		zenity --error --title="D E B M O D E" --text"Package not created"
-		rm -rf $nome
-	fi
+zenity --info --title="D E B M O D E" --text="Package successfully created"
+#Delete the directory and other files
+rm -rf $nome
+else
+zenity --error --title="D E B M O D E" --text"Package not created"
+rm -rf $nome
+fi
 }
 
 install_deb(){
@@ -167,25 +167,25 @@ install_deb(){
         dpkg -i $deb
         if [ $? -eq 0 ]
         then
-        	zenity --info --title="D E B M O D E" --text="Package successfully installed"
+         zenity --info --title="D E B M O D E" --text="Package successfully installed"
         else
-        	zenity --error --title="D E B M O D E" --text"Package not installed"
+         zenity --error --title="D E B M O D E" --text"Package not installed"
         fi
         echo 100
-        )| zenity --progress --title="D E B M O D E" --text="Installing package..." --auto-close --pulsate      
+        )| zenity --progress --title="D E B M O D E" --text="Installing package..." --auto-close --pulsate
 }
 
 # Script ###############################################################
 #First, I control if zenity is installed
 if ! type zenity >/dev/null
 then
-	echo "It's impossible to execute the script. The package zenity is not installed."
-	exit 1
+echo "It's impossible to execute the script. The package zenity is not installed."
+exit 1
 fi
 menu_principale
 case $azione in
 "I extract a deb file")
-file=`zenity --file-selection --title="Select a File"`
+	file=`zenity --file-selection --title="Select a File"`
 	if [ $file >/dev/null ]; then
 		ARCHIVE_FULLPATH="$file"
 		NEWDIRNAME=${ARCHIVE_FULLPATH%.*}
@@ -197,14 +197,19 @@ file=`zenity --file-selection --title="Select a File"`
 	extract
 ;;
 "I create a deb file")
-	#Build e deb file
+#Build e deb file
         #Name of package
         nome=`zenity --entry --title="D E B M O D" --text="Name of package"`
+	if [ "$nome" = '' ]
+	then
+		zenity --error --no-wrap --no-markup --text="It's impossible to create the package. A name is necessary to conitue." --title="D E B M O D ERROR" --window-icon='error' --width=400 --height=300
+		exit 1
+	fi
         mkdir $nome
         build
 ;;
 "I install a deb file")
-	#Instal a deb file
+#Instal a deb file
         install_deb
 ;;
 *)menu_principale
