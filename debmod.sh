@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Script creato da TheZero
 #
 # Version GUI (Fork by Pinperepette)
@@ -125,9 +125,11 @@ build(){
 #Structure
         cd $nome #Move into the package's directory
         mkdir DEBIAN usr usr/bin
+        #Tell to the user that he should put all executable files in a directory
+        zenity --info --title="D E B M O D" --text="Now you are going to select a directory with all the executable files. If you don't have created it, you should do it now. Press ok when you are ready."
         #Choose the executable file
-        exe=`zenity --file-selection --title="Choose the executable file"`
-        cp $exe usr/bin/
+        dir=`zenity --file-selection --directory --title="Choose the directory with all executable files"`
+        cp -r $dir usr/bin/
         #Create the control file of the package
         file_control
        
