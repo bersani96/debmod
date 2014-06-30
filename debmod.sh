@@ -113,9 +113,9 @@ file_desktop(){
         zenity --question --title="D E B M O D E" --text="Does the programm start in a terminal?"
         if [ $? -eq 0 ]
         then
-                echo "Terminal=true" >>$nome.dekstop
+                echo "Terminal=true" >>$nome.desktop
         else
-                echo "Terminal=false" >>$nome.dekstop
+                echo "Terminal=false" >>$nome.desktop
         fi
         echo "Categories=Utility;Accessories;" >>$nome.desktop
         cd ../../.. #Go back to $nome
@@ -129,7 +129,7 @@ build(){
         zenity --info --title="D E B M O D" --text="Now you are going to select a directory with all the executable files. If you don't have created it, you should do it now. Press ok when you are ready."
         #Choose the executable file
         dir=`zenity --file-selection --directory --title="Choose the directory with all executable files"`
-        cp -r $dir usr/bin/
+        cp -r $dir/* usr/bin/
         #Create the control file of the package
         file_control
        
