@@ -8,3 +8,21 @@ With this script you can:
 * install deb file
 
 To execute this script in the right way tou need tu execute it as root.
+
+#Installation
+To install debmod you have two possibilities:
+*Download from GitHub
+You can downlaod the source code from github and use it manually.
+```
+wget https://github.com/bersani96/debmod/archive/GUI.zip
+unzip GUI.zip
+cd debmod-GUI
+./debmod.sh
+```
+*Downlaod deb package
+Or you can download the deb package and install it.
+```
+wget 
+dpkg -i debmod.deb
+```
+It will create also a starter in the menù.
