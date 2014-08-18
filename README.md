@@ -13,7 +13,7 @@ To execute this script in the right way tou need tu execute it as root.
 To install debmod you have two possibilities:
 *Download from GitHub
 You can downlaod the source code from github and use it manually.
-```
+```sh
 wget https://github.com/bersani96/debmod/archive/GUI.zip
 unzip GUI.zip
 cd debmod-GUI
@@ -21,8 +21,8 @@ cd debmod-GUI
 ```
 *Downlaod deb package
 Or you can download the deb package and install it.
-```
-wget 
+```sh
+wget https://github.com/bersani96/debmod/blob/GUI/debmod.deb
 dpkg -i debmod.deb
 ```
 It will create also a starter in the menù.
