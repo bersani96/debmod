@@ -106,7 +106,7 @@ file_desktop(){
                 echo "Icon=/usr/share/icons/hicolor/48x48/$nome.png" >>$nome.desktop
         else
                 #Else, i use a random icon
-                echo "Icon=~/icona/gnome-multimedia.png" >>$nome.desktop
+                echo "Icon=application-default-icon" >>$nome.desktop
         fi
         dato=`zenity --entry --title="D E B M O D E" --text="Command for start the programm"`
         echo "Exec=$dato" >>$nome.desktop
@@ -130,6 +130,16 @@ build(){
         #Choose the executable file
         dir=`zenity --file-selection --directory --title="Choose the directory with all executable files"`
         cp -r $dir/* usr/bin/
+        #Control if there is some config file
+        zenity --question --title="D E B M O D" --text="Do you have some configuration files?"
+        if [ $? -eq 0 ]
+        then
+        	#Select the directory
+        	zenity --info --title="D E B M O D" --text="Now you are going to select a directory with all the configuration files. If you don't have created it, you should do it now. Press ok when you are ready."
+        	dir=`zenity --file-selection --directory --title="Choose the directory with all configuration files"`
+        	mkdir -p etc/$nome
+        	cp $dir/* etc/$nome/
+        fi
         #Create the control file of the package
         file_control
        
