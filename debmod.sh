@@ -138,7 +138,7 @@ build(){
         	zenity --info --title="D E B M O D" --text="Now you are going to select a directory with all the configuration files. If you don't have created it, you should do it now. Press ok when you are ready."
         	dir=`zenity --file-selection --directory --title="Choose the directory with all configuration files"`
         	mkdir -p etc/$nome
-        	cp $dir/* etc/$nome/
+        	cp -R $dir/* etc/$nome/
         fi
         #Create the control file of the package
         file_control
